@@ -1,58 +1,59 @@
-# Cypress Heroes Demo Application
+# Cypress Heroes — Testes Automatizados
 
-This is a demo application that shows how to use Cypress to run end-to-end,
-component, and API tests against an application.
+Este repositório contém a suíte de testes automatizados desenvolvida com **Cypress** para o projeto **Cypress Heroes**, como parte do módulo de Automação de Testes do curso **Guardião da Qualidade**, da LumeStack.
 
-## Getting Started
+## Sobre o projeto
 
-The app is a mono repo that uses npm workspaces. Once you clone the project,
-install the dependencies at the root folder:
+O Cypress Heroes é uma aplicação de catálogo de heróis, com autenticação de usuários (comum e admin) e controle de permissões para criação de novos heróis. O projeto é dividido em `client` (frontend em React/Vite) e `server` (backend em NestJS + Prisma).
 
-```sh
+## Tecnologias utilizadas
+
+- Cypress (testes end-to-end)
+- TypeScript
+
+## Como rodar os testes
+
+```bash
 npm install
-```
-
-After that a few more things need to be set up (databases and such), to do so run:
-
-```sh
 npm run setup
-```
-
-
-To launch the app for development, run:
-
-```sh
 npm run dev
 ```
 
-This will start both the client and server apps in dev mode. The site will be
-available at http://localhost:3000.
+Em outro terminal, dentro da pasta `client`:
 
-## App Overview
-
-The Cypress Heroes app consists of a frontend client app written in React that
-uses Vite, as well as a backend app that uses NestJS.
-
-### React Client App
-
-The React client app is located in the **client** folder. It is a standard React [Vite](https://vitejs.dev/) app.
-
-Todo: fill out
-
-### NestJS Server App
-
-The server app is in the **server** folder. It is built with the [NestJS](https://nestjs.com/) Node.js framework. It uses [Prisma](https://www.prisma.io/) for the database ORM.
-
-#### Database seeding and resetting
-
-The database is seeded from the **server/prisma/seed.ts** script when you set up the app. If at any time you want to reset the database back to its initial state, run:
-
-```sh
-npm run resetdb
+```bash
+npx cypress open
 ```
 
-## Environment Variables
+## Funcionalidades testadas
 
-The client app uses an environment variable to know what the URL is for the
-backend api named `VITE_API_URL`. It defaults to "http://localhost:3001" for use
-in dev mode, and should be overriden in other environments/modes.
+### 1. Login (`login.cy.ts`)
+- Login com usuário válido
+- Login com credenciais inválidas (validação da mensagem de erro "Invalid email or password")
+
+### 2. Listagem de Heróis (`heroes-list.cy.ts`)
+- Exibição da listagem de heróis após o login
+- Verificação de que cada card exibe as informações esperadas (nome, preço, fãs, saves)
+
+### 3. Criação de Herói e Controle de Permissão (`permissao-criar-heroi.cy.ts`)
+- Acesso à tela `/heroes/new` sem estar logado
+- Tentativa de submissão do formulário de criação sem estar logado
+- Criação de herói com sucesso, estando logado como usuário admin
+
+## Bug encontrado
+
+Durante os testes de controle de permissão, foi identificado o seguinte comportamento:
+
+**A tela de criação de herói (`/heroes/new`) é acessível mesmo sem o usuário estar autenticado.** Um usuário deslogado consegue visualizar e preencher o formulário completo de criação de herói, quando o esperado seria o sistema redirecionar para a tela de login ou exibir uma mensagem de acesso negado.
+
+Ao investigar mais a fundo, confirmou-se que a criação do herói **é bloqueada corretamente pelo backend** (o herói não é salvo no banco de dados quando o formulário é submetido sem autenticação). Porém, **nenhuma mensagem de erro é exibida ao usuário** nesse cenário, o que é uma falha de usabilidade: a pessoa não recebe nenhum retorno sobre o motivo da ação não ter funcionado.
+
+**Sugestão de melhoria:** a rota `/heroes/new` deveria verificar a autenticação do usuário antes de renderizar o formulário, redirecionando para o login caso o usuário não esteja autenticado. Adicionalmente, ao tentar submeter uma ação sem permissão, o sistema deveria exibir uma mensagem de erro clara (ex: "Você precisa estar logado como administrador para criar um herói").
+
+## Casos de teste
+
+A documentação completa dos casos de teste (cenários, passos, resultados esperados/obtidos e evidências) está disponível na planilha `Plano_de_Testes_CypressHeroes-v2.xlsx`, mantida separadamente deste repositório.
+
+## Autor
+
+Maylin Nunes — projeto desenvolvido como parte do curso Guardião da Qualidade (LumeStack).
